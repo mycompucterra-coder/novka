@@ -1,0 +1,375 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    font-family: 'Courier New', 'Consolas', monospace;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* Мобильные фишки */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+#game {
+    position: relative;
+    width: 100vw;
+    /* dvh — динамическая высота, не съедается адресной строкой */
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+/* ===== ФОН ===== */
+#background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 1;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    transform-origin: center center;
+}
+
+/* Пиксель-арт рендер — только на десктопе */
+@media (min-width: 768px) {
+    #background, #sprite-alina {
+        image-rendering: pixelated;
+    }
+}
+
+/* Пульсация */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.012); }
+}
+
+#background.pulsing {
+    animation: pulse 4s ease-in-out infinite;
+}
+
+/* Тряска */
+@keyframes shake {
+    0%   { transform: translate(0, 0) rotate(0deg); }
+    10%  { transform: translate(-6px, 4px) rotate(-0.4deg); }
+    20%  { transform: translate(5px, -5px) rotate(0.4deg); }
+    30%  { transform: translate(-5px, -3px) rotate(-0.3deg); }
+    40%  { transform: translate(4px, 5px) rotate(0.3deg); }
+    50%  { transform: translate(-4px, 3px) rotate(-0.2deg); }
+    60%  { transform: translate(3px, -4px) rotate(0.2deg); }
+    70%  { transform: translate(-2px, 2px) rotate(-0.1deg); }
+    80%  { transform: translate(2px, -2px) rotate(0.1deg); }
+    90%  { transform: translate(-1px, 1px) rotate(0deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+#background.shaking {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* ===== СПРАЙТ ===== */
+#sprite-alina {
+    position: absolute;
+    bottom: 5vh;
+    left: 50%;
+    height: 72vh;
+    width: auto;
+    transform: translateX(-50%) translateY(40px);
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    z-index: 2;
+    pointer-events: none;
+    display: none;
+}
+
+#sprite-alina.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ===== ВСПЫШКА ===== */
+#flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 50;
+    transition: opacity 0.05s ease;
+}
+
+#flash.active {
+    opacity: 1;
+}
+
+/* ===== VIGNETTE ===== */
+#vignette {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 30%,
+        rgba(80, 0, 0, 0.4) 70%,
+        rgba(40, 0, 0, 0.85) 100%
+    );
+}
+
+#vignette.active {
+    opacity: 1;
+}
+
+/* ============================================
+   ДИАЛОГОВОЕ ОКНО — БАЗА (десктоп)
+   ============================================ */
+#dialogue-box {
+    position: absolute;
+    bottom: 30px;
+    left: 6%;
+    right: 6%;
+    min-height: 190px;
+    padding: 40px 45px 30px 45px;
+    color: #e8e8f0;
+    cursor: pointer;
+    z-index: 3;
+
+    background: #14121c;
+    border: 3px solid #6a6a80;
+    outline: 3px solid #14121c;
+    outline-offset: -9px;
+    border-radius: 0;
+
+    box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.9),
+        0 0 0 3px #14121c;
+}
+
+#dialogue-box::before,
+#dialogue-box::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #a0a0b8;
+}
+
+#dialogue-box::before { top: -6px; left: -6px; }
+#dialogue-box::after  { bottom: -6px; right: -6px; }
+
+/* ===== ПЛАШКА ИМЕНИ ===== */
+#speaker-name {
+    position: absolute;
+    top: -22px;
+    left: 25px;
+    padding: 8px 24px;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #14121c;
+    background: #ff6b8a;
+    border: 3px solid #14121c;
+    outline: 2px solid #ff6b8a;
+    outline-offset: 2px;
+    border-radius: 0;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8);
+    display: none;
+}
+
+/* ===== ТЕКСТ ===== */
+#dialogue-text {
+    font-size: 20px;
+    line-height: 1.7;
+    min-height: 80px;
+    color: #e8e8f0;
+    letter-spacing: 0.5px;
+}
+
+/* ===== МЫСЛИ ===== */
+#dialogue-box.thoughts {
+    border-color: #4a6a9a;
+}
+
+#dialogue-box.thoughts::before,
+#dialogue-box.thoughts::after {
+    background: #88ccff;
+}
+
+#dialogue-box.thoughts #dialogue-text {
+    font-style: italic;
+    color: #a8d0ff;
+}
+
+/* ===== СТРЕЛКА ===== */
+#continue-hint {
+    position: absolute;
+    bottom: 12px;
+    right: 30px;
+    font-size: 20px;
+    color: #ff6b8a;
+    animation: bounce 0.8s steps(2, end) infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+}
+
+/* ===== МЕНЮ ВЫБОРА ===== */
+#choices {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 60%;
+    max-width: 600px;
+    z-index: 10;
+}
+
+.choice-btn {
+    background: #14121c;
+    border: 3px solid #6a6a80;
+    color: #e8e8f0;
+    padding: 18px 25px;
+    font-size: 18px;
+    font-family: inherit;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.8);
+    letter-spacing: 1px;
+}
+
+.choice-btn:hover {
+    background: #ff6b8a;
+    color: #14121c;
+    border-color: #14121c;
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.8);
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ============================================
+   МОБИЛЬНАЯ ВЕРСИЯ (экран < 768px)
+   ============================================ */
+@media (max-width: 767px) {
+
+    /* Окно — выше, шире, текст крупнее */
+    #dialogue-box {
+        bottom: 15px;
+        left: 3%;
+        right: 3%;
+        min-height: 30dvh;
+        padding: 32px 22px 42px 22px;
+        box-shadow:
+            4px 4px 0 rgba(0, 0, 0, 0.9),
+            0 0 0 3px #14121c;
+    }
+
+    #dialogue-box::before,
+    #dialogue-box::after {
+        width: 10px;
+        height: 10px;
+    }
+
+    #dialogue-box::before { top: -5px; left: -5px; }
+    #dialogue-box::after  { bottom: -5px; right: -5px; }
+
+    /* Плашка имени — компактнее */
+    #speaker-name {
+        top: -18px;
+        left: 15px;
+        padding: 6px 16px;
+        font-size: 15px;
+        letter-spacing: 1px;
+    }
+
+    /* Текст — крупнее для чтения с руки */
+    #dialogue-text {
+        font-size: 17px;
+        line-height: 1.55;
+        min-height: 60px;
+    }
+
+    /* Стрелка — побольше */
+    #continue-hint {
+        font-size: 22px;
+        bottom: 10px;
+        right: 20px;
+    }
+
+    /* Кнопки — во всю ширину */
+    #choices {
+        width: 90%;
+        max-width: none;
+        gap: 12px;
+    }
+
+    .choice-btn {
+        padding: 20px 20px;
+        font-size: 17px;
+        letter-spacing: 0.5px;
+    }
+
+    /* Спрайт — компактнее, чтобы не перекрывал окно */
+    #sprite-alina {
+        height: 60dvh;
+        bottom: 30dvh;
+    }
+
+    /* Vignette чуть мягче */
+    #vignette {
+        background: radial-gradient(
+            ellipse at center,
+            transparent 25%,
+            rgba(80, 0, 0, 0.45) 70%,
+            rgba(40, 0, 0, 0.88) 100%
+        );
+    }
+}
+
+/* ============================================
+   ОЧЕНЬ УЗКИЕ ЭКРАНЫ (< 380px)
+   ============================================ */
+@media (max-width: 380px) {
+    #dialogue-text {
+        font-size: 15px;
+    }
+
+    #dialogue-box {
+        padding: 28px 18px 38px 18px;
+    }
+
+    #speaker-name {
+        font-size: 13px;
+        padding: 5px 12px;
+    }
+}
